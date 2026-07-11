@@ -43,7 +43,8 @@ export class DevicesService {
         telemetry: { orderBy: { timestamp: 'desc' }, take: 10 },
       },
     });
-    if (!device) throw new NotFoundException(`Device with ID "${id}" not found`);
+    if (!device)
+      throw new NotFoundException(`Device with ID "${id}" not found`);
     return device;
   }
 

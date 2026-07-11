@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as mqtt from 'mqtt';
 import type { MqttClient } from 'mqtt';
@@ -11,7 +16,7 @@ export class MqttConnectionService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async onModuleInit(): Promise<void> {
+  onModuleInit(): void {
     const brokerUrl = this.configService.get<string>(
       'MQTT_BROKER_URL',
       'mqtt://localhost:1883',

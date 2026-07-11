@@ -32,7 +32,8 @@ export class DevicesController {
 
   @Get('status')
   @ApiOperation({
-    summary: 'Get device status overview (online/offline/lastSeen/battery/signal)',
+    summary:
+      'Get device status overview (online/offline/lastSeen/battery/signal)',
   })
   getDeviceStatus() {
     return this.devicesService.getDeviceStatus();

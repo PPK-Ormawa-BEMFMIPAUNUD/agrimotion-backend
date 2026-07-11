@@ -42,10 +42,7 @@ export class MqttSubscriberService implements OnModuleInit {
     }
   }
 
-  private async routeMessage(
-    topic: string,
-    message: Buffer,
-  ): Promise<void> {
+  private async routeMessage(topic: string, message: Buffer): Promise<void> {
     // topic format: agrimotion/device/{deviceId}/{type}
     const parts = topic.split('/');
     if (parts.length < 4) {

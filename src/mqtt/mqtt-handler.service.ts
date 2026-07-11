@@ -39,10 +39,7 @@ export class MqttHandlerService {
     // 3. Find device
     const device = await this.prisma.device.findFirst({
       where: {
-        OR: [
-          { deviceCode: dto.deviceId },
-          { espSerial: dto.deviceId },
-        ],
+        OR: [{ deviceCode: dto.deviceId }, { espSerial: dto.deviceId }],
       },
     });
 
@@ -83,14 +80,13 @@ export class MqttHandlerService {
       );
     } catch (err) {
       const error = err as Error;
-      this.logger.error(`MQTT Error: failed to save telemetry — ${error.message}`);
+      this.logger.error(
+        `MQTT Error: failed to save telemetry — ${error.message}`,
+      );
     }
   }
 
-  async handleStatus(
-    deviceIdentifier: string,
-    message: Buffer,
-  ): Promise<void> {
+  async handleStatus(deviceIdentifier: string, message: Buffer): Promise<void> {
     const statusText = message.toString().trim().toUpperCase();
 
     if (statusText !== 'ONLINE' && statusText !== 'OFFLINE') {
@@ -102,10 +98,7 @@ export class MqttHandlerService {
 
     const device = await this.prisma.device.findFirst({
       where: {
-        OR: [
-          { deviceCode: deviceIdentifier },
-          { espSerial: deviceIdentifier },
-        ],
+        OR: [{ deviceCode: deviceIdentifier }, { espSerial: deviceIdentifier }],
       },
     });
 

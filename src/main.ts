@@ -3,12 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // Use Pino Logger
+  app.useLogger(app.get(Logger));
 
   // Security: Helmet
   app.use(helmet());
@@ -68,8 +72,9 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('PORT', 3000);
 
   await app.listen(port);
-  console.log(`🌱 AGRI-MOTION API is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger docs available at: http://localhost:${port}/api`);
+  const logger = app.get(Logger);
+  logger.log(`🌱 AGRI-MOTION API is running on: http://localhost:${port}`);
+  logger.log(`📚 Swagger docs available at: http://localhost:${port}/api`);
 }
 
 void bootstrap();

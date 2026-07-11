@@ -12,12 +12,20 @@ export class CreateDeviceDto {
   @IsNotEmpty()
   espSerial!: string;
 
-  @ApiProperty({ description: 'Farm ID', example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({
+    description: 'Farm ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   @IsUUID()
   @IsNotEmpty()
   farmId!: string;
 
-  @ApiProperty({ description: 'Device status', example: 'ACTIVE', required: false, default: 'ACTIVE' })
+  @ApiProperty({
+    description: 'Device status',
+    example: 'ACTIVE',
+    required: false,
+    default: 'ACTIVE',
+  })
   @IsString()
   @IsOptional()
   status?: string;

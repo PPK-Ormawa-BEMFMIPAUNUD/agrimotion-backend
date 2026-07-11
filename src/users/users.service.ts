@@ -14,12 +14,14 @@ export class UsersService {
     const users = await this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return users.map(({ password: _, ...rest }) => rest);
   }
 
   async findOne(id: string): Promise<Omit<User, 'password'>> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User with ID "${id}" not found`);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result;
   }
@@ -32,6 +34,7 @@ export class UsersService {
         password: hashedPassword,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result;
   }

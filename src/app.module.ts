@@ -13,12 +13,17 @@ import { SensorsModule } from './sensors/sensors.module.js';
 import { TelemetryModule } from './telemetry/telemetry.module.js';
 import { MqttModule } from './mqtt/mqtt.module.js';
 import { AlertsModule } from './alerts/alerts.module.js';
+import { SystemModule } from './system/system.module.js';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? '.env.production'
+          : '.env.development',
       validationSchema: Joi.object({
         DATABASE_URL: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
@@ -38,9 +43,19 @@ import { AlertsModule } from './alerts/alerts.module.js';
         },
       ],
     }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { colorize: true } }
+            : undefined,
+        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+      },
+    }),
     PrismaModule,
     MqttModule,
     HealthModule,
+    SystemModule,
     AuthModule,
     UsersModule,
     FarmsModule,

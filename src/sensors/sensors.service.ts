@@ -19,7 +19,8 @@ export class SensorsService {
       where: { id },
       include: { device: true },
     });
-    if (!sensor) throw new NotFoundException(`Sensor with ID "${id}" not found`);
+    if (!sensor)
+      throw new NotFoundException(`Sensor with ID "${id}" not found`);
     return sensor;
   }
 

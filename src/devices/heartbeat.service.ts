@@ -21,10 +21,7 @@ export class HeartbeatService {
     const staleDevices = await this.prisma.device.findMany({
       where: {
         status: 'ONLINE',
-        OR: [
-          { lastOnline: { lt: threshold } },
-          { lastOnline: null },
-        ],
+        OR: [{ lastOnline: { lt: threshold } }, { lastOnline: null }],
       },
     });
 

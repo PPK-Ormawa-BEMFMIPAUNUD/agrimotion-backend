@@ -1,32 +1,101 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: agrimotion-postgres
-    restart: unless-stopped
+  backend:
+    build: .
+    container_name: agrimotion_backend
+    restart: always
     ports:
-      - '5433:5432'
-    environment:
-      POSTGRES_USER: agrimotion
-      POSTGRES_PASSWORD: agrimotion
-      POSTGRES_DB: agrimotion
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - '3000:3000'
+    env_file:
+      - .env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+    networks:
+      - agrimotion_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
-  mosquitto:
-    image: eclipse-mosquitto:2
-    container_name: agrimotion-mosquitto
-    restart: unless-stopped
+  postgres:
+    image: postgres:15-alpine
+    container_name: agrimotion_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agrimotion}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agrimotion_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-agrimotion}
+    volumes:
+      - agrimotion_pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - agrimotion_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agrimotion}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: agrimotion_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@agrimotion.id}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    networks:
+      - agrimotion_network
+
+  emqx:
+    image: emqx:5.8
+    container_name: agrimotion_emqx
+    restart: always
     ports:
       - '1883:1883'
-      - '9001:9001'
+      - '8083:8083' # WebSocket
+      - '18083:18083' # Dashboard
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_log:/mosquitto/log
+      - agrimotion_emqx_data:/opt/emqx/data
+    networks:
+      - agrimotion_network
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: agrimotion_nginx
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+    networks:
+      - agrimotion_network
 
 volumes:
-  pgdata:
-  mosquitto_data:
-  mosquitto_log:
+  agrimotion_pgdata:
+  agrimotion_emqx_data:
+
+networks:
+  agrimotion_network:
+    driver: bridge

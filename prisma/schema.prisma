@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model Farm {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  commodity String
+  location  String
+  area      Float?
+  ownerId   String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  devices   Device[]
+
+  @@map("farms")
+}
+
+model Device {
+  id         String      @id @default(uuid()) @db.Uuid
+  deviceCode String      @unique
+  espSerial  String      @unique
+  farmId     String      @db.Uuid
+  status     String      @default("OFFLINE")
+  battery    Float?
+  signal     Int?
+  lastOnline DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  farm       Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  sensors    Sensor[]
+  telemetry  Telemetry[]
+  alerts     Alert[]
+
+  @@index([farmId])
+  @@map("devices")
+}
+
+model Sensor {
+  id        String   @id @default(uuid()) @db.Uuid
+  deviceId  String   @db.Uuid
+  type      String
+  createdAt DateTime @default(now())
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("sensors")
+}
+
+model Telemetry {
+  id           String   @id @default(uuid()) @db.Uuid
+  deviceId     String   @db.Uuid
+  timestamp    DateTime @default(now())
+  nitrogen     Float?
+  phosphorus   Float?
+  potassium    Float?
+  ph           Float?
+  soilMoisture Float?
+  temperature  Float?
+  humidity     Float?
+  lux          Float?
+  device       Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, timestamp(sort: Desc)])
+  @@index([timestamp])
+  @@map("telemetry")
+}
+
+model Alert {
+  id        String   @id @default(uuid()) @db.Uuid
+  deviceId  String   @db.Uuid
+  type      String
+  message   String
+  status    String   @default("UNRESOLVED")
+  createdAt DateTime @default(now())
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("alerts")
+}

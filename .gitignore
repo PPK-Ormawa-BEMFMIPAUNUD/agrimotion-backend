@@ -1,7 +1,28 @@
 node_modules
-# Keep environment variables out of version control
-.env
-
-/generated/prisma
 dist
 postgres-data
+/generated/prisma
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.development
+.env.production
+.env.local
+.env.*.local
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

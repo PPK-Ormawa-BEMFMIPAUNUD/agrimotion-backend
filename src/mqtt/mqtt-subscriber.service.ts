@@ -24,7 +24,12 @@ export class MqttSubscriberService implements OnModuleInit {
     });
 
     client.on('message', (topic: string, message: Buffer) => {
-      void this.routeMessage(topic, message);
+      this.routeMessage(topic, message).catch((err: Error) => {
+        this.logger.error(
+          `Unhandled error in MQTT routeMessage on topic "${topic}": ${err.message}`,
+          err.stack,
+        );
+      });
     });
   }
 

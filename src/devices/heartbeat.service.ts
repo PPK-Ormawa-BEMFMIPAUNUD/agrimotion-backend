@@ -23,16 +23,24 @@ export class HeartbeatService {
         status: 'ONLINE',
         OR: [{ lastOnline: { lt: threshold } }, { lastOnline: null }],
       },
+      select: {
+        id: true,
+        deviceCode: true,
+        lastOnline: true,
+      },
     });
 
     if (staleDevices.length === 0) return;
 
-    for (const device of staleDevices) {
-      await this.prisma.device.update({
-        where: { id: device.id },
-        data: { status: 'OFFLINE' },
-      });
+    const staleIds = staleDevices.map((device) => device.id);
 
+    // Perform a bulk update to mark all stale devices as OFFLINE in one query
+    await this.prisma.device.updateMany({
+      where: { id: { in: staleIds } },
+      data: { status: 'OFFLINE' },
+    });
+
+    for (const device of staleDevices) {
       this.logger.warn(
         `Device Offline (heartbeat timeout): ${device.deviceCode} — last seen ${device.lastOnline?.toISOString() ?? 'never'}`,
       );

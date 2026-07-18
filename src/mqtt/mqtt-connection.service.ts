@@ -21,13 +21,25 @@ export class MqttConnectionService implements OnModuleInit, OnModuleDestroy {
       'MQTT_BROKER_URL',
       'mqtt://localhost:1883',
     );
+    const username = this.configService.get<string>('MQTT_USERNAME');
+    const password = this.configService.get<string>('MQTT_PASSWORD');
+
     this.logger.log(`Connecting to MQTT broker at ${brokerUrl}...`);
 
-    this.client = mqtt.connect(brokerUrl, {
+    const connectOptions: mqtt.IClientOptions = {
       clientId: `agrimotion-backend-${Date.now()}`,
       reconnectPeriod: 5000,
       clean: true,
-    });
+    };
+
+    if (username) {
+      connectOptions.username = username;
+    }
+    if (password) {
+      connectOptions.password = password;
+    }
+
+    this.client = mqtt.connect(brokerUrl, connectOptions);
 
     this.client.on('connect', () => {
       this.connected = true;

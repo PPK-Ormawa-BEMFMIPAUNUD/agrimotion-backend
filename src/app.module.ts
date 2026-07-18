@@ -33,6 +33,8 @@ import { LoggerModule } from 'nestjs-pino';
           .valid('development', 'production', 'test')
           .default('development'),
         MQTT_BROKER_URL: Joi.string().default('mqtt://localhost:1883'),
+        MQTT_USERNAME: Joi.string().optional(),
+        MQTT_PASSWORD: Joi.string().optional(),
       }),
     }),
     ThrottlerModule.forRoot({

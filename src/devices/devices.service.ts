@@ -56,10 +56,27 @@ export class DevicesService {
   }
 
   async getDeviceStatus(): Promise<DeviceStatusResponse> {
-    const devices = await this.prisma.device.findMany({
-      include: { farm: true },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const [devices, total, online] = await Promise.all([
+      this.prisma.device.findMany({
+        select: {
+          id: true,
+          deviceCode: true,
+          espSerial: true,
+          status: true,
+          lastOnline: true,
+          battery: true,
+          signal: true,
+          farm: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.device.count(),
+      this.prisma.device.count({ where: { status: 'ONLINE' } }),
+    ]);
 
     const statusItems: DeviceStatusItem[] = devices.map((d) => ({
       id: d.id,
@@ -72,14 +89,11 @@ export class DevicesService {
       signal: d.signal,
     }));
 
-    const online = devices.filter((d) => d.status === 'ONLINE').length;
-    const offline = devices.filter((d) => d.status !== 'ONLINE').length;
-
     return {
       summary: {
-        total: devices.length,
+        total,
         online,
-        offline,
+        offline: total - online,
       },
       devices: statusItems,
     };

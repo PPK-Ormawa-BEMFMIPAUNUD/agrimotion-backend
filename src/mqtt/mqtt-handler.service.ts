@@ -115,15 +115,23 @@ export class MqttHandlerService {
       updateData.lastOnline = new Date();
     }
 
-    await this.prisma.device.update({
-      where: { id: device.id },
-      data: updateData,
-    });
+    try {
+      await this.prisma.device.update({
+        where: { id: device.id },
+        data: updateData,
+      });
 
-    if (statusText === 'ONLINE') {
-      this.logger.log(`Device Connected: ${device.deviceCode}`);
-    } else {
-      this.logger.warn(`Device Offline: ${device.deviceCode}`);
+      if (statusText === 'ONLINE') {
+        this.logger.log(`Device Connected: ${device.deviceCode}`);
+      } else {
+        this.logger.warn(`Device Offline: ${device.deviceCode}`);
+      }
+    } catch (err) {
+      const error = err as Error;
+      this.logger.error(
+        `Failed to update device status for "${deviceIdentifier}" to ${statusText}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

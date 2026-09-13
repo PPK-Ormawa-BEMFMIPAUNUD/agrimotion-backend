@@ -16,6 +16,7 @@ import { AlertsModule } from './alerts/alerts.module.js';
 import { SystemModule } from './system/system.module.js';
 import { ActuationModule } from './actuation/actuation.module.js';
 import { LoggerModule } from 'nestjs-pino';
+import { DssModule } from './dss/dss.module.js';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { LoggerModule } from 'nestjs-pino';
     SensorsModule,
     TelemetryModule,
     AlertsModule,
+    DssModule,
   ],
   providers: [
     {

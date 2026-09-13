@@ -75,4 +75,23 @@ export class MqttConnectionService implements OnModuleInit, OnModuleDestroy {
   isConnected(): boolean {
     return this.connected;
   }
+
+  publishCommand(topic: string, message: string): void {
+    if (!this.client) {
+      this.logger.error(
+        `Cannot publish to ${topic}: MQTT client is not initialized`,
+      );
+      return;
+    }
+
+    this.client.publish(topic, message, { qos: 1 }, (err) => {
+      if (err) {
+        this.logger.error(
+          `Failed to publish command to ${topic}: ${err.message}`,
+        );
+      } else {
+        this.logger.log(`Published command to ${topic}: "${message}"`);
+      }
+    });
+  }
 }

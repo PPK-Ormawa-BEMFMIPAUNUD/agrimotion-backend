@@ -14,6 +14,7 @@ import { TelemetryModule } from './telemetry/telemetry.module.js';
 import { MqttModule } from './mqtt/mqtt.module.js';
 import { AlertsModule } from './alerts/alerts.module.js';
 import { SystemModule } from './system/system.module.js';
+import { ActuationModule } from './actuation/actuation.module.js';
 import { LoggerModule } from 'nestjs-pino';
 
 @Module({
@@ -56,6 +57,7 @@ import { LoggerModule } from 'nestjs-pino';
     }),
     PrismaModule,
     MqttModule,
+    ActuationModule,
     HealthModule,
     SystemModule,
     AuthModule,

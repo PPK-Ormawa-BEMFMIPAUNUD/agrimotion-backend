@@ -7,12 +7,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
+  id            String          @id @default(uuid()) @db.Uuid
+  name          String
+  email         String          @unique
+  password      String
+  role          String          @default("USER")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime?       @default(now())
+  user_logins   user_logins[]
+  watering_logs watering_logs[]
 
   @@map("users")
 }
@@ -32,20 +35,21 @@ model Farm {
 }
 
 model Device {
-  id         String      @id @default(uuid()) @db.Uuid
-  deviceCode String      @unique
-  espSerial  String      @unique
-  farmId     String      @db.Uuid
-  status     String      @default("OFFLINE")
-  battery    Float?
-  signal     Int?
-  lastOnline DateTime?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  farm       Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  sensors    Sensor[]
-  telemetry  Telemetry[]
-  alerts     Alert[]
+  id            String          @id @default(uuid()) @db.Uuid
+  deviceCode    String          @unique
+  espSerial     String          @unique
+  farmId        String          @db.Uuid
+  status        String          @default("OFFLINE")
+  lastOnline    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  battery       Float?
+  signal        Int?
+  alerts        Alert[]
+  farm          Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  sensors       Sensor[]
+  telemetry     Telemetry[]
+  watering_logs watering_logs[]
 
   @@index([farmId])
   @@map("devices")
@@ -92,4 +96,22 @@ model Alert {
 
   @@index([deviceId])
   @@map("alerts")
+}
+
+model user_logins {
+  id      String   @id @db.Uuid
+  userId  String   @db.Uuid
+  loginAt DateTime @default(now())
+  users   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model watering_logs {
+  id        String   @id @db.Uuid
+  deviceId  String   @db.Uuid
+  userId    String?  @db.Uuid
+  type      String
+  duration  Int
+  createdAt DateTime @default(now())
+  devices   Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  users     User?    @relation(fields: [userId], references: [id])
 }

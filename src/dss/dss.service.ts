@@ -93,11 +93,7 @@ export class DssService {
       accum_fert_7d: accumFert7d,
     };
 
-    const sensorSummary = {
-      soilMoisture: parseFloat(soilMoisture.toFixed(1)),
-      nitrogen: parseFloat(soilN.toFixed(1)),
-      ph: parseFloat(soilPh.toFixed(1)),
-    };
+    const sensorSummary = `Air: ${soilMoisture.toFixed(1)}% | pH: ${soilPh.toFixed(1)} | N: ${soilN.toFixed(1)} mg/kg`;
 
     // 3. Panggil ML Service
     try {
@@ -125,9 +121,11 @@ export class DssService {
         demplotId,
         cropName: meta.cropName,
         recommendedGrams: mlData.recommended_grams,
+        recommendedValue: mlData.recommended_grams,
         sensorSummary,
+        reason: `Rekomendasi AI (${mlData.recommended_grams}g) berdasarkan kondisi sensor riil dan umur ${hst} HST.`,
         source: 'ml_model',
-      };
+      } as any;
     } catch (error) {
       this.logger.error(`Gagal menghubungi ML Service: ${(error as Error).message}. Menggunakan fallback.`);
       
@@ -140,9 +138,11 @@ export class DssService {
         demplotId,
         cropName: meta.cropName,
         recommendedGrams: fallbackGrams,
+        recommendedValue: fallbackGrams,
         sensorSummary,
+        reason: `Rekomendasi standar agronomi (${fallbackGrams}g) untuk fase ${hst} HST.`,
         source: 'fallback',
-      };
+      } as any;
     }
   }
 }

@@ -17,6 +17,7 @@ import { SystemModule } from './system/system.module.js';
 import { ActuationModule } from './actuation/actuation.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { DssModule } from './dss/dss.module.js';
+import { EwsModule } from './ews/ews.module.js';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { DssModule } from './dss/dss.module.js';
     TelemetryModule,
     AlertsModule,
     DssModule,
+    EwsModule,
   ],
   providers: [
     {

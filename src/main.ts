@@ -62,6 +62,8 @@ async function bootstrap(): Promise<void> {
     .addTag('Sensors', 'Sensor management')
     .addTag('Telemetry', 'Telemetry data endpoints')
     .addTag('Alerts', 'Alert management')
+    .addTag('DSS', 'Decision Support System endpoints')
+    .addTag('EWS', 'Early Warning System endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

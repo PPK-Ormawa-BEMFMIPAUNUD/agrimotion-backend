@@ -75,6 +75,44 @@ async function main() {
 
   console.log('\n🎉 Seeding completed!');
   console.log('📝 Login credentials: admin@agrimotion.id / admin123');
+  console.log('✅ Seeding complete.');
+
+  console.log('\n🌱 Seeding Crop Cycles (HST = 38)...');
+  // Tanggal tanam = 38 hari yang lalu dari hari ini.
+  const plantingDate = new Date();
+  plantingDate.setDate(plantingDate.getDate() - 38);
+
+  const commodities = [
+    { id: 0, name: 'Bunga Pacah Air', days: 60 },
+    { id: 1, name: 'Sawi Organik', days: 35 },
+    { id: 2, name: 'Cabai Rawit', days: 90 },
+  ];
+
+  for (const demplot of commodities) {
+    const targetHarvestDate = new Date(plantingDate);
+    targetHarvestDate.setDate(targetHarvestDate.getDate() + demplot.days);
+    
+    // Matikan siklus lama
+    await prisma.cropCycle.updateMany({
+      where: { demplotId: demplot.id, status: 'ACTIVE' },
+      data: { status: 'COMPLETED' },
+    });
+
+    // Buat siklus baru dengan HST 38
+    await prisma.cropCycle.create({
+      data: {
+        demplotId: demplot.id,
+        commodityName: demplot.name,
+        plantingDate,
+        targetHarvestDate,
+        status: 'ACTIVE',
+        notes: 'Siklus otomatis dibuat oleh seeder (HST 38)',
+      },
+    });
+    console.log(`✅ Active Crop Cycle created for Demplot ${demplot.id} - ${demplot.name}`);
+  }
+  
+  console.log('\n🚀 All seed data injected successfully!');
 }
 
 main()

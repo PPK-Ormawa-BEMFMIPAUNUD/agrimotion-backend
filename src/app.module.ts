@@ -18,6 +18,7 @@ import { ActuationModule } from './actuation/actuation.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { DssModule } from './dss/dss.module.js';
 import { EwsModule } from './ews/ews.module.js';
+import { CropCyclesModule } from './crop-cycles/crop-cycles.module.js';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { EwsModule } from './ews/ews.module.js';
     AlertsModule,
     DssModule,
     EwsModule,
+    CropCyclesModule,
   ],
   providers: [
     {

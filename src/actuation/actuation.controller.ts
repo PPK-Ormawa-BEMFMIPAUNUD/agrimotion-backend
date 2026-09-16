@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { ActuationService } from './actuation.service.js';
@@ -30,5 +30,11 @@ export class ActuationController {
   @ApiOperation({ summary: 'Dapatkan status pompa yang sedang aktif' })
   getActiveActuations() {
     return this.actuationService.getActiveActuations();
+  }
+
+  @Get('analytics/water-usage')
+  @ApiOperation({ summary: 'Dapatkan agregasi penggunaan air per demplot' })
+  getWaterUsageAnalytics(@Query('period') period?: string) {
+    return this.actuationService.getWaterUsageAnalytics(period || 'week');
   }
 }

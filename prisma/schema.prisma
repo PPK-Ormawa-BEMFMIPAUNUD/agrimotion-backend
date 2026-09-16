@@ -115,3 +115,20 @@ model watering_logs {
   devices   Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   users     User?    @relation(fields: [userId], references: [id])
 }
+
+model CropCycle {
+  id                String    @id @default(uuid()) @db.Uuid
+  demplotId         Int
+  commodityName     String
+  plantingDate      DateTime
+  targetHarvestDate DateTime?
+  harvestDate       DateTime?
+  yieldKg           Float?
+  notes             String?
+  status            String    @default("ACTIVE")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([demplotId, status])
+  @@map("crop_cycles")
+}

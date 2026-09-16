@@ -64,6 +64,7 @@ async function bootstrap(): Promise<void> {
     .addTag('Alerts', 'Alert management')
     .addTag('DSS', 'Decision Support System endpoints')
     .addTag('EWS', 'Early Warning System endpoints')
+    .addTag('Crop Cycles', 'Crop cycle management endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

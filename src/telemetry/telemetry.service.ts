@@ -310,49 +310,4 @@ export class TelemetryService {
       activeSensors: Number(activeSensorsCount[0]?.active_sensors) || 0,
     };
   }
-
-  async getCorrelationAnalytics(demplotIdRaw: string | number, period: string) {
-    const deviceIds = await this.resolveDeviceIdsForDemplot(demplotIdRaw);
-    const startDate = this.getStartDateForPeriod(period);
-    const deviceIdsJoined = deviceIds.map(id => `'${id}'`).join(',');
-    
-    let bucketExpr = '';
-    let labelFmt = '';
-    
-    if (period === 'day') {
-      bucketExpr = `DATE_TRUNC('hour', "timestamp") - (EXTRACT(HOUR FROM "timestamp")::int % 2) * INTERVAL '1 hour'`;
-      labelFmt = `'HH24:00'`;
-    } else {
-      bucketExpr = `DATE("timestamp")`;
-      labelFmt = `'DD Mon'`;
-    }
-
-    const results: any[] = await this.prisma.$queryRawUnsafe(`
-      SELECT 
-        TO_CHAR(${bucketExpr}, ${labelFmt}) AS label_text,
-        MIN(${bucketExpr}) as bucket_time,
-        ROUND(AVG("temperature")::numeric, 1) AS avg_temperature,
-        ROUND(AVG("humidity")::numeric, 1) AS avg_humidity,
-        ROUND(AVG("soilMoisture")::numeric, 1) AS avg_soil_moisture
-      FROM telemetry
-      WHERE "deviceId" IN (${deviceIdsJoined})
-        AND "timestamp" >= $1
-      GROUP BY bucket_time, label_text
-      ORDER BY bucket_time ASC;
-    `, startDate);
-
-    let points = results.map(row => ({
-      label: row.label_text,
-      temperature: Number(row.avg_temperature) || 0,
-      humidity: Number(row.avg_humidity) || 0,
-      soilMoisture: Number(row.avg_soil_moisture) || 0,
-    }));
-    
-    if (period === 'month' && points.length > 10) {
-      const step = Math.ceil(points.length / 10);
-      points = points.filter((_, i) => i % step === 0);
-    }
-    
-    return points;
-  }
 }

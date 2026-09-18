@@ -117,7 +117,7 @@ model watering_logs {
 }
 
 model CropCycle {
-  id                String    @id @default(uuid()) @db.Uuid
+  id                String         @id @default(uuid()) @db.Uuid
   demplotId         Int
   commodityName     String
   plantingDate      DateTime
@@ -125,10 +125,35 @@ model CropCycle {
   harvestDate       DateTime?
   yieldKg           Float?
   notes             String?
-  status            String    @default("ACTIVE")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  status            String         @default("ACTIVE")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  activities        FarmActivity[]
 
   @@index([demplotId, status])
   @@map("crop_cycles")
+}
+
+enum ActivityType {
+  WATERING
+  FERTILIZATION
+  SPRAYING
+}
+
+model FarmActivity {
+  id            String       @id @default(uuid()) @db.Uuid
+  demplotId     Int          // 0: Pacah, 1: Sawi, 2: Cabai
+  cropCycleId   String?      @db.Uuid
+  type          ActivityType
+  volumeLiter   Float?       // Volume air / larutan (L)
+  substanceName String?      // Nama pupuk/cairan
+  dosage        String?      // Dosis/takaran
+  notes         String?      // Catatan perlakuan
+  executedAt    DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+
+  cropCycle     CropCycle?   @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+
+  @@index([demplotId, type, executedAt])
+  @@map("farm_activities")
 }

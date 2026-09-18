@@ -46,15 +46,4 @@ export class TelemetryController {
   ) {
     return this.telemetryService.getAnalyticsOverview(demplotId, period || 'week');
   }
-
-  @Get('analytics/correlation')
-  @ApiOperation({ summary: 'Get temperature & humidity correlation data' })
-  @ApiQuery({ name: 'demplotId', required: true, description: 'Demplot ID (0, 1, 2)' })
-  @ApiQuery({ name: 'period', required: true, description: 'day, week, month' })
-  getCorrelationAnalytics(
-    @Query('demplotId') demplotId: string,
-    @Query('period') period: string,
-  ) {
-    return this.telemetryService.getCorrelationAnalytics(demplotId, period || 'week');
-  }
 }

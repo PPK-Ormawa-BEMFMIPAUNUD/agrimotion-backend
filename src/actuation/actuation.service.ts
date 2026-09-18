@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { MqttConnectionService } from '../mqtt/mqtt-connection.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DEMPLOT_METADATA } from '../dss/dss.types.js';
+import { ActivityType } from '@prisma/client';
 import {
   CreateActuationDto,
   StopActuationDto,
@@ -108,6 +109,11 @@ export class ActuationService implements OnModuleDestroy {
       if (existing) {
         clearTimeout(existing.timer);
         this.activeTimers.delete(key);
+        const elapsed = Math.max(
+          1,
+          Math.round((Date.now() - new Date(existing.startedAt).getTime()) / 1000),
+        );
+        this.recordActuationLog(existing, elapsed);
       }
 
       this.mqttConnection.publishCommand(this.topic, commandOff);
@@ -120,6 +126,11 @@ export class ActuationService implements OnModuleDestroy {
     const stoppedKeys = Array.from(this.activeTimers.keys());
     for (const item of this.activeTimers.values()) {
       clearTimeout(item.timer);
+      const elapsed = Math.max(
+        1,
+        Math.round((Date.now() - new Date(item.startedAt).getTime()) / 1000),
+      );
+      this.recordActuationLog(item, elapsed);
     }
     this.activeTimers.clear();
 
@@ -135,9 +146,83 @@ export class ActuationService implements OnModuleDestroy {
     const key = `${demplot}_${type}`;
     const commandOff = `${key}_OFF`;
 
+    const activeItem = this.activeTimers.get(key);
     this.activeTimers.delete(key);
     this.mqttConnection.publishCommand(this.topic, commandOff);
     this.logger.log(`Actuation timer expired for ${key}. Published: ${commandOff}`);
+
+    if (activeItem) {
+      this.recordActuationLog(activeItem);
+    }
+  }
+
+  private async recordActuationLog(
+    item: ActiveActuationItem,
+    actualDurationSeconds?: number,
+  ): Promise<void> {
+    try {
+      const duration = actualDurationSeconds ?? item.durationSeconds;
+      if (duration <= 0) return;
+
+      const meta = DEMPLOT_METADATA[item.demplotIndex];
+      const volumeLiter = Math.round(duration * 0.05 * 10) / 10;
+
+      let actType: ActivityType = ActivityType.WATERING;
+      let substanceName = 'Air Baku Irigasi';
+      let dosage = `${duration} detik siram otomatis`;
+
+      if (item.type === ActuationType.PUPUK) {
+        actType = ActivityType.FERTILIZATION;
+        substanceName = 'Pupuk NPK 16-16-16 & Organik Cair';
+        dosage = `${duration} detik fertigasi kocor`;
+      } else if (item.type === ActuationType.PESTI) {
+        actType = ActivityType.SPRAYING;
+        substanceName = 'Pestisida Nabati & Fungisida Hayati';
+        dosage = `${duration} detik semprot kabut`;
+      }
+
+      const activeCycle = await this.prisma.cropCycle.findFirst({
+        where: { demplotId: item.demplotIndex, status: 'ACTIVE' },
+      });
+
+      const logId = crypto.randomUUID();
+      const executedAt = new Date(item.startedAt);
+
+      await this.prisma.farmActivity.create({
+        data: {
+          id: logId,
+          demplotId: item.demplotIndex,
+          cropCycleId: activeCycle?.id ?? null,
+          type: actType,
+          volumeLiter,
+          substanceName,
+          dosage,
+          notes: `Aktuasi pompa cerdas AGRI-MOTION (${duration} detik)`,
+          executedAt,
+        },
+      });
+
+      await this.prisma.watering_logs.create({
+        data: {
+          id: logId,
+          deviceId: meta?.defaultDeviceId ?? '10000000-0000-0000-0000-000000000001',
+          type:
+            item.type === ActuationType.PUPUK
+              ? 'FERTILIZER'
+              : item.type === ActuationType.PESTI
+                ? 'PESTICIDE'
+                : 'WATER',
+          duration,
+          createdAt: executedAt,
+        },
+      });
+
+      this.logger.log(
+        `Recorded farm activity & watering log for ${item.key} (${duration}s, ${volumeLiter}L)`,
+      );
+    } catch (err) {
+      this.logger.warn(`Failed to record actuation log: ${err}`);
+    }
   }
 
   getActiveActuations(): ActiveActuationResponse[] {

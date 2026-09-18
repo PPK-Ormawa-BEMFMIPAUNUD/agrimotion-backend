@@ -24,22 +24,51 @@ export interface SoilMoistureTrendItem {
 export class TelemetryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getLatest(query: TelemetryQueryDto): Promise<Telemetry[]> {
-    const where = this.buildWhereClause(query);
-    const limit = query.limit ?? 10;
+  async getLatest(
+    query?: TelemetryQueryDto | string | number,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data: Telemetry | Telemetry[] | null;
+  }> {
+    let dto: TelemetryQueryDto = {};
+    if (typeof query === 'string' || typeof query === 'number') {
+      dto = { demplotId: String(query) };
+    } else if (query) {
+      dto = query;
+    }
 
-    return this.prisma.telemetry.findMany({
+    const where = await this.buildWhereClause(dto);
+    const limit = dto.limit ?? 10;
+
+    const records = await this.prisma.telemetry.findMany({
       where,
       orderBy: { timestamp: 'desc' },
       take: limit,
       include: { device: true },
     });
+
+    const isDemplotFiltered = dto.demplotId !== undefined && dto.demplotId !== '';
+
+    if (!records || records.length === 0) {
+      return {
+        success: true,
+        message: 'Latest telemetry fetched successfully',
+        data: isDemplotFiltered ? null : [],
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Latest telemetry fetched successfully',
+      data: isDemplotFiltered ? records[0] : records,
+    };
   }
 
   async getHistory(
     query: TelemetryQueryDto,
   ): Promise<PaginatedResult<Telemetry>> {
-    const where = this.buildWhereClause(query);
+    const where = await this.buildWhereClause(query);
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const sort = query.sort ?? 'desc';
@@ -67,13 +96,28 @@ export class TelemetryService {
     };
   }
 
-  private buildWhereClause(
-    query: TelemetryQueryDto,
-  ): Prisma.TelemetryWhereInput {
+  private async buildWhereClause(
+    query?: TelemetryQueryDto,
+  ): Promise<Prisma.TelemetryWhereInput> {
     const where: Prisma.TelemetryWhereInput = {};
+    if (!query) return where;
 
-    if (query.deviceId) {
+    if (query.demplotId !== undefined && query.demplotId !== '') {
+      const deviceIds = await this.resolveDeviceIdsForDemplot(query.demplotId);
+      if (deviceIds.length > 0) {
+        where.deviceId = { in: deviceIds };
+      }
+    } else if (query.deviceId) {
       where.deviceId = query.deviceId;
+    } else if (query.nodeId) {
+      const dev = await this.prisma.device.findFirst({
+        where: {
+          OR: [{ deviceCode: query.nodeId }, { espSerial: query.nodeId }],
+        },
+      });
+      if (dev) {
+        where.deviceId = dev.id;
+      }
     }
 
     if (query.date) {

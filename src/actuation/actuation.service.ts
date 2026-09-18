@@ -235,4 +235,27 @@ export class ActuationService implements OnModuleDestroy {
       totalLiters: Math.round(totalLiters * 10) / 10,
     };
   }
+
+  async getAccumulation(period: string = 'week') {
+    return this.getWaterUsageAnalytics(period);
+  }
+
+  async getHistory(limit: number = 20) {
+    try {
+      const logs = await this.prisma.watering_logs.findMany({
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          devices: true,
+          users: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+        },
+      });
+      return logs;
+    } catch (e) {
+      this.logger.warn(`Failed to fetch watering_logs: ${e}`);
+      return [];
+    }
+  }
 }

@@ -16,6 +16,19 @@ export enum SortOrder {
 }
 
 export class TelemetryQueryDto {
+  @ApiProperty({
+    description: 'Filter by demplot ID (0, 1, 2) or identifier',
+    required: false,
+    example: '0',
+  })
+  @IsOptional()
+  demplotId?: string;
+
+  @ApiProperty({ description: 'Filter by node ID or code', required: false })
+  @IsString()
+  @IsOptional()
+  nodeId?: string;
+
   @ApiProperty({ description: 'Filter by device ID (UUID)', required: false })
   @IsString()
   @IsOptional()

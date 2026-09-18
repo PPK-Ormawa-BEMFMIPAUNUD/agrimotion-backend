@@ -10,6 +10,10 @@ export class TelemetryController {
 
   @Get('latest')
   @ApiOperation({ summary: 'Get latest telemetry readings' })
+  @ApiQuery({ name: 'demplotId', required: false, description: 'Demplot ID (0, 1, 2) or identifier' })
+  @ApiQuery({ name: 'deviceId', required: false, description: 'Filter by device UUID' })
+  @ApiQuery({ name: 'nodeId', required: false, description: 'Filter by node code' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Limit number of records (default: 10)' })
   getLatest(@Query() query: TelemetryQueryDto) {
     return this.telemetryService.getLatest(query);
   }

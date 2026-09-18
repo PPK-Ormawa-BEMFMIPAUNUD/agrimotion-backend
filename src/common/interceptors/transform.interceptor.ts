@@ -31,6 +31,32 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
     return next.handle().pipe(
       map((result) => {
+        // If the service already returns standard wrapper { success, message, data }
+        const isStandard =
+          result !== null &&
+          typeof result === 'object' &&
+          'success' in result &&
+          'data' in result;
+
+        if (isStandard) {
+          const standard = result as unknown as {
+            success: boolean;
+            message?: string;
+            data: T;
+            meta?: Record<string, unknown>;
+          };
+          return {
+            success: standard.success ?? true,
+            message: standard.message ?? 'Success',
+            data: standard.data,
+            meta: {
+              statusCode: response.statusCode,
+              timestamp: new Date().toISOString(),
+              ...(standard.meta ?? {}),
+            },
+          };
+        }
+
         // If the service returns { data, meta } (paginated), merge meta into root meta
         const isPaginated =
           result !== null &&

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActuationService } from './actuation.service.js';
 import { MqttConnectionService } from '../mqtt/mqtt-connection.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { ActuationType } from './dto/create-actuation.dto.js';
 
 describe('ActuationService', () => {
@@ -19,6 +20,15 @@ describe('ActuationService', () => {
         {
           provide: MqttConnectionService,
           useValue: mqttConnectionMock,
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+            watering_logs: {
+              findMany: jest.fn().mockResolvedValue([]),
+            },
+          },
         },
       ],
     }).compile();

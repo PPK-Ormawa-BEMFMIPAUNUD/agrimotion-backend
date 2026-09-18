@@ -25,6 +25,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let errors: unknown = null;
+    let errorCode: string | undefined = undefined;
 
     // Handle HttpException (NestJS built-in: 400, 401, 403, 404, 409, etc.)
     if (exception instanceof HttpException) {
@@ -39,6 +40,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       ) {
         const res = exceptionResponse as Record<string, unknown>;
         message = (res['message'] as string) ?? exception.message;
+        if (res['code'] && typeof res['code'] === 'string') {
+          errorCode = res['code'];
+        }
         if (Array.isArray(res['message'])) {
           message = 'Validation failed';
           errors = res['message'];
@@ -65,8 +69,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           status = HttpStatus.BAD_REQUEST;
           message = 'Foreign key constraint failed';
           break;
+        case 'P1000':
+        case 'P1001':
+        case 'P1002':
+        case 'P1003':
+        case 'P1008':
+        case 'P1011':
+        case 'P1017':
+          status = HttpStatus.SERVICE_UNAVAILABLE;
+          message = `Database connection or authentication failed (${prismaError.code})`;
+          break;
         default:
-          status = HttpStatus.BAD_REQUEST;
+          status = HttpStatus.INTERNAL_SERVER_ERROR;
           message = `Database error: ${prismaError.code ?? 'unknown'}`;
       }
     }
@@ -84,6 +98,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       success: false,
       message,
+      ...(errorCode ? { code: errorCode } : {}),
       data: null,
       errors,
       meta: {

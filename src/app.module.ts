@@ -21,6 +21,7 @@ import { EwsModule } from './ews/ews.module.js';
 import { CropCyclesModule } from './crop-cycles/crop-cycles.module.js';
 import { ActivitiesModule } from './activities/activities.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { AnalyticsModule } from './analytics/analytics.module.js';
     CropCyclesModule,
     ActivitiesModule,
     AnalyticsModule,
+    ReportsModule,
   ],
   providers: [
     {
